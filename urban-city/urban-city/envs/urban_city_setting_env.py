@@ -84,14 +84,16 @@ class UrbanCitySetting(gym.Env):
 
     def step(self, action):
         # [straight, right, left, stop]
+        perform_action = [0, 0, 0, 0]
+        perform_action[action] = 1
         cur_location = self._agent_location
         direction = dict(r=1, l=2, u=3, d=4)
         clockwise = [direction['r'], direction['d'], direction['l'], direction['u']]
         idx = clockwise.index(self.direction)
 
-        if np.array_equal(action, [1, 0, 0, 0]) or np.array_equal(action, [0, 0, 0, 1]):
+        if np.array_equal(perform_action, [1, 0, 0, 0]) or np.array_equal(perform_action, [0, 0, 0, 1]):
             new_dir = clockwise[idx]  # no change
-        elif np.array_equal(action, [0, 1, 0, 0]):
+        elif np.array_equal(perform_action, [0, 1, 0, 0]):
             next_idx = (idx + 1) % 4
             new_dir = clockwise[next_idx]  # right turn r -> d -> l -> u
         else:
@@ -100,7 +102,7 @@ class UrbanCitySetting(gym.Env):
 
         self.direction = new_dir
 
-        if not np.array_equal(action, [0, 0, 0, 1]):
+        if not np.array_equal(perform_action, [0, 0, 0, 1]):
             if self.direction == direction["r"]:
                 self._agent_location = np.clip(self._agent_location + np.array([1, 0]), 0, self.size - 1)
             elif self.direction == direction["l"]:
@@ -114,7 +116,7 @@ class UrbanCitySetting(gym.Env):
         reward = 0
         if (self.roadblock_collision() or
                 self.run_traffic_light() or
-                not self.change_direction_intersection(action, cur_location)):
+                not self.change_direction_intersection(perform_action, cur_location)):
             game_over = True
             reward = -5
             observation = self._get_obs()
