@@ -1,5 +1,4 @@
 import numpy as np
-import pygame
 
 import gymnasium as gym
 from gymnasium import spaces
@@ -115,8 +114,14 @@ class UrbanCitySetting(gym.Env):
         game_over = False
         reward = 0
         if (self.roadblock_collision() or
-                self.run_traffic_light() or
-                not self.change_direction_intersection(perform_action, cur_location)):
+                self.run_traffic_light()):
+            game_over = True
+            reward = -10
+            observation = self._get_obs()
+            info = self._get_info()
+            return observation, reward, game_over, False, info
+
+        if not self.change_direction_intersection(perform_action, cur_location):
             game_over = True
             reward = -5
             observation = self._get_obs()
@@ -126,6 +131,13 @@ class UrbanCitySetting(gym.Env):
         if np.array_equal(self._agent_location, self._target_location):
             game_over = True
             reward = 10
+            observation = self._get_obs()
+            info = self._get_info()
+            return observation, reward, game_over, False, info
+
+        if self.change_direction_intersection(perform_action, cur_location):
+            game_over = False
+            reward = 5
             observation = self._get_obs()
             info = self._get_info()
             return observation, reward, game_over, False, info
