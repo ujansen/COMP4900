@@ -113,10 +113,16 @@ class UrbanCitySetting(gym.Env):
 
         game_over = False
         reward = 0
-        if (self.roadblock_collision() or
-                self.run_traffic_light()):
+        if self.roadblock_collision():
             game_over = True
             reward = -10
+            observation = self._get_obs()
+            info = self._get_info()
+            return observation, reward, game_over, False, info
+
+        if self.run_traffic_light():
+            game_over = False
+            reward = -3
             observation = self._get_obs()
             info = self._get_info()
             return observation, reward, game_over, False, info
