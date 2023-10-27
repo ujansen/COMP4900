@@ -79,7 +79,8 @@ class RoadNetEnv(gym.Env):
     def _get_obs(self):
         return {
             "agent": int(self._agent_pos),
-            "target": self._target_nodes
+            "target": self._target_nodes,
+            "prev": int(self._previous_pos)
         }
 
     def _get_info(self):
@@ -91,18 +92,22 @@ class RoadNetEnv(gym.Env):
             self._traffic_node_colours = {index: np.random.randint(0, 2) > 0.5 for
                                           index in np.where(self._traffic_nodes)[0]}
 
-        prev_pos = self._agent_pos
+        cur_pos = self._agent_pos
         self._agent_pos = self.graph[self._agent_pos][action]
         reward = 0.
         if self._target_nodes[self._agent_pos]:
             reward = 1.0
             self._target_nodes[self._agent_pos] = False
-        elif self._agent_pos == prev_pos and action != 4:
-            print(f"Tried going from {self.node_positions[prev_pos]} to {self.node_positions[self._agent_pos]}")
+        elif self._agent_pos == cur_pos and action != 4:
+            print(f"Tried going from {self.node_positions[cur_pos]} to "
+                  f"{self.node_positions[self._agent_pos]}")
             reward = -5.0
-        elif self._traffic_nodes[prev_pos] and self._traffic_node_colours[prev_pos] == 0 and action != 4:
-            print(f"Tried going from {self.node_positions[prev_pos]} to {self.node_positions[self._agent_pos]}")
-            reward = -5.0
+        elif (self._traffic_nodes[cur_pos] and self._traffic_node_colours[cur_pos] == 0 and
+              action != 4):
+            reward = 5 * self._find_penalty(cur_pos)
+            print(f"Tried going from {self.node_positions[cur_pos]} to "
+                  f"{self.node_positions[self._agent_pos]} while "
+                  f"red traffic light")
 
         print(reward)
 
@@ -114,8 +119,33 @@ class RoadNetEnv(gym.Env):
 
         if self.render_mode == "human":
             self.render()
-
+        self._previous_pos = cur_pos
         return observation, reward, terminated, False, info
+
+    def _find_penalty(self, cur_pos):
+        prev_node_coord = self.node_positions[self._previous_pos]
+        cur_node_coord = self.node_positions[cur_pos]
+        next_node_coord = self.node_positions[self._agent_pos]
+
+        prev_vector = cur_node_coord - prev_node_coord
+        next_vector = next_node_coord - cur_node_coord
+
+        angle = np.arccos(np.clip(np.dot(prev_vector/np.linalg.norm(prev_vector),
+                                         next_vector/np.linalg.norm(next_vector)), -1.0, 1.0))
+
+        if 0 <= angle <= np.pi/4 or (315 * np.pi)/180 <= angle <= 2 * np.pi:
+            direction_key = 0
+        elif np.pi/4 <= angle <= (135 * np.pi)/180:
+            direction_key = 1
+        elif (135 * np.pi)/180 <= angle <= (225 * np.pi)/180:
+            direction_key = 2
+        else:
+            direction_key = 3
+        direction = self._angle_to_direction[direction_key]
+        penalty = self._accident_prob[direction]
+
+        return penalty
+
 
     def __init__(self, render_mode=None, graph=None, node_positions=None):
         if graph is None:
@@ -141,11 +171,24 @@ class RoadNetEnv(gym.Env):
         self._traffic_node_colours = {index: np.random.randint(0, 2) > 0.5 for
                                       index in np.where(self._traffic_nodes)[0]}
         self._timer = 1
-
+        self._previous_pos = self._agent_pos
+        self._angle_to_direction = {
+            0: "straight",
+            1: "left",
+            2: "right",
+            3: "back"
+        }
+        self._accident_prob = {
+            "straight": -0.9,
+            "left": -0.8,
+            "right": -0.4,
+            "back": -0.95
+        }
         self.observation_space = spaces.Dict(
             {
                 "agent": spaces.Discrete(self.n_nodes),
                 "target": spaces.MultiBinary((self.n_nodes,)),
+                "prev": spaces.Discrete(self.n_nodes)
             }
         )
         self.action_space = spaces.Discrete(5)
