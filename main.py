@@ -43,13 +43,19 @@ def main():
     graph, locations = make_grid_city(5, 5)
     env = gym.make('RoadNetEnv-v0', render_mode='human', graph=graph, node_positions=locations)
     observation, info = env.reset()
+    
+    
+    userInput = input("Manually move agent? (Y/N)\n")
+    if(userInput == "Y"):
+        env.render()
+        env.manualInputMode()
+    else:
+        for _ in range(1000):
+            action = env.action_space.sample() # agent policy that uses the observation and info
+            observation, reward, terminated, truncated, info = env.step(action)
 
-    for _ in range(1000):
-        action = env.action_space.sample()  # agent policy that uses the observation and info
-        observation, reward, terminated, truncated, info = env.step(action)
-
-        if terminated or truncated:
-            observation, info = env.reset()
+            if terminated or truncated:
+                observation, info = env.reset()
 
     env.close()
 

@@ -123,6 +123,9 @@ class RoadNetEnv(gym.Env):
         if self.render_mode == "human":
             self.render()
         self._previous_pos = cur_pos
+        
+        if terminated:
+            print("Terminated")
         return observation, reward, terminated, False, info
 
     def _find_accident_prob(self, cur_pos):
@@ -197,7 +200,7 @@ class RoadNetEnv(gym.Env):
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
-        self.window_size = 1024
+        self.window_size = 700
 
         self.window = None
         self.clock = None
@@ -214,6 +217,28 @@ class RoadNetEnv(gym.Env):
             pygame.display.quit()
             pygame.quit()
 
+    def manualInputMode(self):
+        run = True
+        while run:
+            action = None
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        action = 1
+                    elif event.key == pygame.K_DOWN:
+                        action = 3
+                    elif event.key == pygame.K_LEFT:
+                        action = 0
+                    elif event.key == pygame.K_RIGHT:
+                        action = 2
+                        
+            if action!= None:
+                observation, reward, terminated, truncated, info = self.step(action)
+                if terminated or truncated:
+                    observation, info = self.reset()
+            self.render()
 
 register(
     id="RoadNetEnv-v0",
