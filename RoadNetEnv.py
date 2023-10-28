@@ -1,5 +1,5 @@
 from random import randint
-
+from math import degrees, atan2
 import gymnasium as gym
 import numpy as np
 import pygame
@@ -199,21 +199,26 @@ class RoadNetEnv(gym.Env):
 
         prev_vector = cur_node_coord - prev_node_coord
         next_vector = next_node_coord - cur_node_coord
+        # prev_vector[1] *= -1 if prev_vector[1] != 0 else prev_vector[1]
+        # next_vector[1] *= -1 if next_vector[1] != 0 else next_vector[1]
 
         # find the angle between vector from prev node to cur node and cur node to next node
-        angle = np.arccos(np.clip(np.dot(prev_vector / np.linalg.norm(prev_vector),
-                                         next_vector / np.linalg.norm(next_vector)), -1.0, 1.0))
+        # angle = np.arccos(np.clip(np.dot(prev_vector / np.linalg.norm(prev_vector),
+        #                                  next_vector / np.linalg.norm(next_vector)), -1.0, 1.0))
+        angle = np.rad2deg(np.arctan2(np.cross(prev_vector, next_vector), np.dot(prev_vector, next_vector)))
+        print(prev_node_coord, cur_node_coord, next_node_coord)
+        print(angle, prev_vector, next_vector)
 
         # if angle between 0 and 45 or 315 and 360, snap to the straight direction
-        if 0 <= angle <= np.pi / 4 or (315 * np.pi) / 180 <= angle <= 2 * np.pi:
+        if 0 <= angle < 90:
             direction_key = 0
 
         # if angle between 45 and 135, snap to the left direction
-        elif np.pi / 4 < angle <= (135 * np.pi) / 180:
+        elif -90 <= angle < 0:
             direction_key = 1
 
         # if angle between 135 and 225, snap to the right direction
-        elif (135 * np.pi) / 180 < angle <= (225 * np.pi) / 180:
+        elif 90 <= angle < 180:
             direction_key = 2
 
         # snap to U-turn or the back direction
@@ -256,7 +261,7 @@ class RoadNetEnv(gym.Env):
         self._target_nodes = np.random.rand(self.n_nodes) > 0.9
         self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
         while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)):
-            self._traffic_nodes = np.random.rand(self.n_nodes) > 0.
+            self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
 
         # randomly set each traffic light to red or green (each has a 50% probability of being either)
         self._traffic_node_colours = {index: np.random.randint(0, 2) > 0.5 for
@@ -296,7 +301,7 @@ class RoadNetEnv(gym.Env):
 
         assert render_mode is None or render_mode in self.metadata["render_modes"]
         self.render_mode = render_mode
-        self.window_size = 1024
+        self.window_size = 700
 
         self.window = None
         self.clock = None
@@ -331,6 +336,36 @@ class RoadNetEnv(gym.Env):
         if self.window is not None:
             pygame.display.quit()
             pygame.quit()
+
+    def manual_input_mode(self):
+        """
+        Human-controlled agent for the environment.
+
+        :return:
+        """
+        run = True
+        while run:
+            action = None
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    run = False
+                elif event.type == pygame.KEYDOWN:
+                    if event.key == pygame.K_UP:
+                        action = 1
+                    elif event.key == pygame.K_DOWN:
+                        action = 3
+                    elif event.key == pygame.K_LEFT:
+                        action = 0
+                    elif event.key == pygame.K_RIGHT:
+                        action = 2
+                    elif event.key == pygame.K_SPACE:
+                        action = 4
+
+            if action is not None:
+                observation, reward, terminated, truncated, info = self.step(action)
+                if terminated or truncated:
+                    observation, info = self.reset()
+            self.render()
 
 
 register(
