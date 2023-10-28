@@ -45,7 +45,7 @@ class RoadNetEnv(gym.Env):
             if self._target_nodes[i]:
                 pygame.draw.circle(
                     canvas,
-                    (0, 127, 0),
+                    (255, 255, 0),
                     self.node_positions[i] * self.window_size,
                     5
                 )
@@ -62,7 +62,7 @@ class RoadNetEnv(gym.Env):
 
         pygame.draw.circle(
             canvas,
-            (0, 0, 255),
+            (0, 229, 255),
             self.node_positions[self._agent_pos] * self.window_size,
             8
         )
@@ -81,14 +81,15 @@ class RoadNetEnv(gym.Env):
         return {
             "agent": int(self._agent_pos),
             "target": self._target_nodes,
-            "prev": int(self._previous_pos)
+            "prev": int(self._previous_pos),
+            "traffic": self._traffic_node_colours[self._agent_pos] if self._agent_pos in self._traffic_node_colours
+            else 1
         }
 
     def _get_info(self):
         return {}
 
     def step(self, action):
-        self._timer += 1
         if self._timer % 10 == 0:
             self._traffic_node_colours = {key: 1 - value for key, value in self._traffic_node_colours.items()}
 
@@ -100,9 +101,11 @@ class RoadNetEnv(gym.Env):
             reward = 1.0
             self._target_nodes[self._agent_pos] = False
         elif self._agent_pos == cur_pos and action != 4:
+            print("Tried going out of bounds")
             print(f"Tried going from {self.node_positions[cur_pos]} to "
                   f"{self.node_positions[self._agent_pos]}")
             reward = -1.0
+            terminated = True
         elif (self._traffic_nodes[cur_pos] and self._traffic_node_colours[cur_pos] == 0 and
               action != 4):
             if np.random.rand() < self._find_accident_prob(cur_pos):
@@ -111,8 +114,15 @@ class RoadNetEnv(gym.Env):
             print(f"Tried going from {self.node_positions[cur_pos]} to "
                   f"{self.node_positions[self._agent_pos]} while "
                   f"red traffic light")
+        elif self._agent_pos == self._previous_pos and self._timer > 1:
+            print(f"Tried taking a u-turn from {self.node_positions[cur_pos]} to "
+                  f"{self.node_positions[self._agent_pos]} and timer is {self._timer}")
+            if np.random.rand() > 0.75:
+                reward = -2.0
+                terminated = True
 
-        print(reward)
+        if reward != 0:
+            print(reward)
 
         observation = self._get_obs()
 
@@ -122,10 +132,8 @@ class RoadNetEnv(gym.Env):
 
         if self.render_mode == "human":
             self.render()
-        self._previous_pos = cur_pos
-        
-        if terminated:
-            print("Terminated")
+        self._previous_pos = cur_pos if action != 4 else self._previous_pos
+        self._timer += 1
         return observation, reward, terminated, False, info
 
     def _find_accident_prob(self, cur_pos):
@@ -148,6 +156,7 @@ class RoadNetEnv(gym.Env):
         else:
             direction_key = 3
         direction = self._angle_to_direction[direction_key]
+        print(direction)
         penalty = self._accident_prob[direction]
 
         return penalty
@@ -193,7 +202,8 @@ class RoadNetEnv(gym.Env):
             {
                 "agent": spaces.Discrete(self.n_nodes),
                 "target": spaces.MultiBinary((self.n_nodes,)),
-                "prev": spaces.Discrete(self.n_nodes)
+                "prev": spaces.Discrete(self.n_nodes),
+                "traffic": spaces.Discrete(2)
             }
         )
         self.action_space = spaces.Discrete(5)
@@ -209,6 +219,13 @@ class RoadNetEnv(gym.Env):
         super().reset(seed=seed)
         self._agent_pos = randint(0, self.n_nodes - 1)
         self._target_nodes = np.random.rand(self.n_nodes) > 0.9
+        self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
+        while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)):
+            self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
+        self._traffic_node_colours = {index: np.random.randint(0, 2) > 0.5 for
+                                      index in np.where(self._traffic_nodes)[0]}
+        self._timer = 1
+        self._previous_pos = self._agent_pos
 
         return self._get_obs(), self._get_info()
 

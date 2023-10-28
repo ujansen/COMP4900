@@ -40,7 +40,7 @@ def make_grid_city(dim_x, dim_y):
 
 
 def main():
-    graph, locations = make_grid_city(5, 5)
+    graph, locations = make_grid_city(10, 10)
     env = gym.make('RoadNetEnv-v0', render_mode='human', graph=graph, node_positions=locations)
     observation, info = env.reset()
     
