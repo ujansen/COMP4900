@@ -256,11 +256,14 @@ class RoadNetEnv(gym.Env):
             self.node_positions = node_positions
             self.graph = graph
 
-        # randomly set the agent, target, and traffic locations (make sure traffic and targets do not overlap)
+        # randomly set the agent, target, and traffic locations (make sure traffic, agent, and targets do not overlap)
         self._agent_pos = randint(0, self.n_nodes - 1)
         self._target_nodes = np.random.rand(self.n_nodes) > 0.9
+        while self._target_nodes[self._agent_pos] and not np.any(self._target_nodes):
+            self._target_nodes = np.random.rand(self.n_nodes) > 0.9
+
         self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
-        while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)):
+        while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)) or self._traffic_nodes[self._agent_pos]:
             self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
 
         # randomly set each traffic light to red or green (each has a 50% probability of being either)
@@ -317,9 +320,13 @@ class RoadNetEnv(gym.Env):
         super().reset(seed=seed)
         self._agent_pos = randint(0, self.n_nodes - 1)
         self._target_nodes = np.random.rand(self.n_nodes) > 0.9
+        while self._target_nodes[self._agent_pos] and not np.any(self._target_nodes):
+            self._target_nodes = np.random.rand(self.n_nodes) > 0.9
+            
         self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
-        while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)):
+        while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)) or self._traffic_nodes[self._agent_pos]:
             self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
+
         self._traffic_node_colours = {index: np.random.randint(0, 2) > 0.5 for
                                       index in np.where(self._traffic_nodes)[0]}
         self._timer = 1
