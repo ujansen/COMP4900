@@ -42,6 +42,7 @@ Uvernes Somarriba: 101146733\\
 
 \section{Methods}
 \subsection{Proximal Policy Optimization (PPO)}
+\label{ppo}
 
 Proximal Policy Optimization (PPO) was introduced in 2017 [1] and has achieved widespread success in the realm of reinforcement learning. It was a successor to Trust Region Policy Optimization (TRPO) introduced in 2015 [2] which used stochastic gradient ascent by using a trust region constraint to regulate between the old policy and the new updated policy. PPO is considered state-of-the-art and is the default reinforcement learning algorithm used at OpenAI because of its ease of use and significantly better and faster performance than its counterparts. 
 
@@ -86,6 +87,7 @@ The environment was modified and the results for each modification of the enviro
 \end{itemize}
 
 \section{Results}
+\label{results}
 In this section we will discuss the results for the various implemented algorithms:
 
 \begin{table*}[h]
@@ -95,9 +97,9 @@ In this section we will discuss the results for the various implemented algorith
 		\toprule
 		Target & Reward Type & Reward Scaling\footnotemark[1] & Agent Score\footnotemark[2] & Random Score\footnotemark[2] & Train Time\footnotemark[3]\\
 		\midrule
-		Single &  Deterministic & Same & 888 & -396 & 15\\
+		Single &  Deterministic & Same & 875 & -396 & 15\\
 		Single & Deterministic & Different\footnotemark[4] & 935 & -369 & 15\\
-		Single & Probabilistic & Different & 920 & -334 & 20\\
+		Single & Probabilistic & Different & 890 & -334 & 20\\
 		\midrule
 		Multiple & Deterministic & Same & 205 & -405 & 20\\
 		Multiple & Deterministic & Different & 379 & -390 & 20\\
@@ -113,13 +115,14 @@ In this section we will discuss the results for the various implemented algorith
 
 
 \section{Discussion}
+\label{discussion}
 From the results, it is clear that for PPO, the more complex the environment becomes, the worse the agent performs. This is expected as it is quite difficult to find an optimal solution to our problem considering how the environment behaves. For the environment dynamic when there is a single target, there does not seem to be large of a difference in performance. The higher score for different reward scaling compared to same can be attributed to the fact that when it makes mistakes, the penalty is lower in the different reward scaling scenario, which is coincidentally also the case for the multiple targets scenario. It is worth noting that the total score for multiple targets is difficult to say since the number of targets is not fixed but it is more than 1000 since there is always at least one target.
 
 An interesting idea would be to fix the traffic lights instead of randomly initializing them. This seems quite intuitive and in fact, could even be considered closer to reality since if the environment is a representation of an urban city setting and we consider that it is the same city, traffic lights and their locations will not suddenly change. And even if they do change, they should remain consistent for a significant time once they do. Perhaps this is an avenue worth exploring where traffic lights are initially fixed but can randomly change after a certain amount of time steps. 
 
-Another interesting observation we found was that when there were varying penalties, sometimes the agent would go out of bounds. This could be due to the fact that going out of bounds had a lower penalty than running traffic lights or making a u-turn. Moreover, in the multiple target scenario, the agent performs significantly worse when penalties are probabilistic which makes sense since this is a difficult environment dynamic to learn. Whenever probabilistic elements are introduced into the environment dynamics, it makes training significantly tougher since even though it might revisit a state and take the same action as it did last time, it might receive a different reward.
+In the multiple target scenario, the agent performs significantly worse than the best agent when penalties are probabilistic which makes sense since this is a difficult environment dynamic to learn. Whenever probabilistic elements are introduced into the environment dynamics, it makes training significantly tougher since even though it might revisit a state and take the same action as it did last time, it might receive a different reward.
 
-Furthermore, it is worth noting that multiple targets yield worse results than singular targets. This is expected because of the fact that when there are multiple targets, there is no way to encode direction, which was something we were able to do when there was a single target. For example, if there was a single target, we had a 1D array indicating if the target was to the up, down, left, right of the agent. But when there are multiple scattered targets, this sort of information is difficult to encode. However, given more time and resources, we would like to perhaps train another agent that has the task of selecting the next target our agent should try to reach effectively reducing the target space to a singular target again. This could be achieved via multiple methods with the most na\"ive method being just picking the target closest (in terms of Manhattan distance) to where the agent is. A further, more refined method would be allocating each target with a priority and then choosing the next target based on the priority. A further refinement would include a combination of the two.
+Furthermore, it is worth noting that multiple targets yield worse results than singular targets. This is expected because of the fact that when there are multiple targets, there is no way to encode direction, which was something we were able to do when there was a single target. For example, if there was a single target, we had a 1D array indicating if the target was to the up, down, left, right of the agent. But when there are multiple scattered targets, this sort of information is difficult to encode. However, given more time and resources, to achieve an optimal policy, we would like to perhaps train another agent that has the task of selecting the next target our agent should try to reach, effectively reducing the target space to a singular target again. This could be achieved via multiple methods with the most na\"ive method being just picking the target closest (in terms of Manhattan distance) to where the agent is. A further, more refined method would be allocating each target with a priority and then choosing the next target based on the priority. A further refinement would include a combination of the two.
 
 Given more time and resources, we would also like to test out more scenarios including various combinations of the scenarios mentioned in \ref{considerations}. We would also like to test various reinforcement learning algorithms and their performance if the targets had priorities assigned to them. We would also like to add pedestrians and random events in the environment and evaluate performance.
 
