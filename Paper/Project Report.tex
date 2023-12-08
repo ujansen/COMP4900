@@ -2,15 +2,15 @@
 \usepackage[preprint]{neurips_2023}
 
 
-\usepackage[utf8]{inputenc} % allow utf-8 input
-\usepackage[T1]{fontenc}    % use 8-bit T1 fonts
-\usepackage{hyperref}       % hyperlinks
-\usepackage{url}            % simple URL typesetting
-\usepackage{booktabs}       % professional-quality tables
-\usepackage{amsfonts}       % blackboard math symbols
-\usepackage{nicefrac}       % compact symbols for 1/2, etc.
-\usepackage{microtype}      % microtypography
-\usepackage{xcolor}         % colors
+\usepackage[utf8]{inputenc} 
+\usepackage[T1]{fontenc}    
+\usepackage{hyperref}       
+\usepackage{url}            
+\usepackage{booktabs}       
+\usepackage{amsfonts}       
+\usepackage{nicefrac}      
+\usepackage{microtype}      
+\usepackage{xcolor}         
 \usepackage{amssymb}
 
 
@@ -38,7 +38,6 @@ Uvernes Somarriba: 101146733\\
 \maketitle
 
 \section{Introduction}
-
 
 \section{Methods}
 \subsection{Proximal Policy Optimization (PPO)}
@@ -82,6 +81,9 @@ The PPO implementation was performed using the library stable\textunderscore bas
 The environment was modified and the results for each modification of the environment is mentioned in the Results section.
 \begin{itemize}
 	\item The targets were reduced from multiple to single. 
+	\begin{itemize}
+	\item Relative directionality from agent to target introduced
+	\end{itemize}
 	\item Running traffic lights, making u-turns, and going out of bounds were always penalized instead of it being probabilistic
 	\item All penalized actions penalized to the same amount
 \end{itemize}
@@ -120,9 +122,9 @@ From the results, it is clear that for PPO, the more complex the environment bec
 
 An interesting idea would be to fix the traffic lights instead of randomly initializing them. This seems quite intuitive and in fact, could even be considered closer to reality since if the environment is a representation of an urban city setting and we consider that it is the same city, traffic lights and their locations will not suddenly change. And even if they do change, they should remain consistent for a significant time once they do. Perhaps this is an avenue worth exploring where traffic lights are initially fixed but can randomly change after a certain amount of time steps. 
 
-In the multiple target scenario, the agent performs significantly worse than the best agent when penalties are probabilistic which makes sense since this is a difficult environment dynamic to learn. Whenever probabilistic elements are introduced into the environment dynamics, it makes training significantly tougher since even though it might revisit a state and take the same action as it did last time, it might receive a different reward.
+In both the single target and the multiple target scenario, the agent performs worse than the best agent when penalties are probabilistic which makes sense since this is a difficult environment dynamic to learn. Whenever probabilistic elements are introduced into the environment dynamics, it makes training significantly tougher since even though it might revisit a state and take the same action as it did last time, it might receive a different reward.
 
-Furthermore, it is worth noting that multiple targets yield worse results than singular targets. This is expected because of the fact that when there are multiple targets, there is no way to encode direction, which was something we were able to do when there was a single target. For example, if there was a single target, we had a 1D array indicating if the target was to the up, down, left, right of the agent. But when there are multiple scattered targets, this sort of information is difficult to encode. However, given more time and resources, to achieve an optimal policy, we would like to perhaps train another agent that has the task of selecting the next target our agent should try to reach, effectively reducing the target space to a singular target again. This could be achieved via multiple methods with the most na\"ive method being just picking the target closest (in terms of Manhattan distance) to where the agent is. A further, more refined method would be allocating each target with a priority and then choosing the next target based on the priority. A further refinement would include a combination of the two.
+Furthermore, it is worth noting that multiple targets yield worse results than singular targets. This is expected because of the fact that when there are multiple targets, there is no way to encode direction, which was something we were able to do when there was a single target. For example, if there was a single target, we had a 1D array indicating if the target was to the up, down, left, right of the agent. But when there are multiple scattered targets, this sort of information is difficult to encode. However, given more time and resources, to achieve an optimal policy, we would like to perhaps train another agent that has the task of selecting the next target our agent should try to reach, effectively reducing the target space to a singular target again. This could be achieved via multiple methods with the most na\"ive method being just picking the target closest (in terms of Manhattan distance) to where the agent is. A further, more refined method would be using some sort of a planning algorithm that picks what the next target should be and feeds in that information to the agent. This could be achieved using some form of a nearest neighbours algorithm or ant colony optimization that finds what the ideal next target should be. The fitness function for the genetic algorithm would just be the rewards picked up during the traversal. The optimal way to solve our environment would be using a good planning agent that picks the next target for our navigating agent (ideally trained using PPO) effectively reducing the state space from having multiple targets to a single target once again, allowing us to encode direction again. We can say with confidence that this would be optimal since this is pretty close to how humans would operate with this environment and furthermore, seeing how well PPO performs on the single target scenario, we can say with high certainty that this will indeed provide optimal results.
 
 Given more time and resources, we would also like to test out more scenarios including various combinations of the scenarios mentioned in \ref{considerations}. We would also like to test various reinforcement learning algorithms and their performance if the targets had priorities assigned to them. We would also like to add pedestrians and random events in the environment and evaluate performance.
 

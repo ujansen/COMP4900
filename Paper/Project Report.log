@@ -1,4 +1,4 @@
-This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.5) (preloaded format=pdflatex 2023.8.31)  7 DEC 2023 17:00
+This is pdfTeX, Version 3.141592653-2.6-1.40.25 (MiKTeX 23.5) (preloaded format=pdflatex 2023.8.31)  8 DEC 2023 18:22
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -499,13 +499,13 @@ Package rerunfilecheck Info: File `"Project Report".out' has not changed.
 (rerunfilecheck)             Checksum: 9EF8CBCC81FD45F17B396A81C443A5EA;804.
  ) 
 Here is how much of TeX's memory you used:
- 12536 strings out of 475503
- 196242 string characters out of 5761834
+ 12542 strings out of 475503
+ 196301 string characters out of 5761834
  1932248 words of memory out of 5000000
- 33503 multiletter control sequences out of 15000+600000
- 590928 words of font info for 150 fonts, out of 8000000 for 9000
+ 33506 multiletter control sequences out of 15000+600000
+ 591058 words of font info for 152 fonts, out of 8000000 for 9000
  1141 hyphenation exceptions out of 8191
- 75i,13n,79p,1144b,515s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 75i,13n,79p,1978b,515s stack positions out of 10000i,1000n,20000p,200000b,200000s
  <C:\Users\ujans\AppData\Local\MiKTeX\fonts/pk/ljfour/jknappen/ec/dpi600\ectt
 1000.pk><C:/Users/ujans/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfon
 ts/cm/cmex10.pfb><C:/Users/ujans/AppData/Local/Programs/MiKTeX/fonts/type1/publ
@@ -520,7 +520,7 @@ sers/ujans/AppData/Local/Programs/MiKTeX/fonts/type1/public/amsfonts/symbols/ms
 bm10.pfb><C:/Users/ujans/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/ut
 mb8a.pfb><C:/Users/ujans/AppData/Local/Programs/MiKTeX/fonts/type1/urw/times/ut
 mr8a.pfb>
-Output written on "Project Report.pdf" (3 pages, 140033 bytes).
+Output written on "Project Report.pdf" (3 pages, 140631 bytes).
 PDF statistics:
  134 PDF objects out of 1000 (max. 8388607)
  12 named destinations out of 1000 (max. 500000)
