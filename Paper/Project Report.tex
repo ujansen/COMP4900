@@ -21,7 +21,7 @@
 Callum Hendry: 100970932\\
 \texttt{callumhendry@cmail.carleton.ca}
 \And
-Jason Dunn: 101140828\\
+Jason Dunn: 101140827\\
 \texttt{jason.dunn@carleton.ca}
 \And
 Ujan Sen: 101171605\\
@@ -87,6 +87,39 @@ The environment was modified and the results for each modification of the enviro
 	\item Running traffic lights, making u-turns, and going out of bounds were always penalized instead of it being probabilistic
 	\item All penalized actions penalized to the same amount
 \end{itemize}
+
+\subsection{Planning Meta-Agent}
+In this design architecture, an agent consists of two parts. First, it has an agent trained for navigating from a given state to another given state with the maximum reward. However, this agent alone has limited usefulness as it does not have any reasonable way to handle longer runs with multiple targets. To solve this problem another component is added to the agent which is specialized in forming long term plans. Essentially, these components treat the environment as a fully connected graph, and it is able to go from any node to any other node with a single action. It is able to do this as the designer knows that the navigation agent is able to move from any node to any other node in some number of actions.
+
+Several different methods were experimented with to try to create a pathing component. It should be noted that these are not restricted to reinforcement learning, as it is worth considering what other options may offer better performance, as reinforcement learning is not suited to all tasks.
+
+\subsubsection{Q-Learning}
+In this approach standard Q-Learning is used based on a complete graph, with the reward going from any node to any other node being equal to the reward obtained by the navigation agent going between those two nodes. For efficiency two abstractions are made: first, this algorithm only tries to solve the travelling salesman problem for the target nodes, as it is not relevant to plan to visit the others, and second it creates a single reward matrix by running the navigation agent several times, then it simply re-uses those rewards.
+
+Unfortunately, using the maximum at each step may not end up creating a complete cycle. Thus, the designer must choose some way to select which actions are taken based on the Q-values. Obtaining the true optimal choices from the Q-Values would involve solving the travelling salesman problem on the values themselves, which effectively defeats the purpose of using this method.
+
+\subsubsection{Gradient Descent Neural Network}
+The main difficulty that this method faces is the lack of a clear differentiable loss function, unless one has access to the true outputs they are aiming for. Thus, in order to use this approach one would have to implement a different method first, which defeats the purpose of using this algorithm. The only practical use of this could be to reduce computation time by training it to mimic a good heuristic algorithm.
+
+\subsubsection{Step-Wise Neural Network}
+This approach uses a neural network that takes in the current state, and outputs a softmax probability output of which nodethe navigation agent should target next. It is possible that this may give good performance eventually, however due to the lack of a meaningful gradient, the only feasible way to train this is to use evolutionary methods.
+
+\subsubsection{Budinich Neural Network}
+TODO
+
+\subsubsection{Evolutionary Mapping Neural Network}
+TODO
+
+\subsubsection{Christofides-Serdyukov Algorithm}
+Although this algorithm is typically very effective, it is not well suited to this particular problem as the environment does not meet the requirements to be considered a metric space. Namely it violates the following conditions: First, the distance from any node to itself is not zero, as there is a penalty for idling. Next, there is no assumption of symmetry. Finally, there is no guarantee that the triangle inequality will hold depending on the quality of the underlying navigation agent. Thus, the usage of this algorithm would be restricted to the Euclidean distances, which misses significant amounts of nuance in the environment.
+
+\subsubsection{Nearest Neighbour}
+This is essentially the simplest method one could use to obtain a reasonable path. It works by starting with a random node and constructing a complete path by iteratively selecting the nearest node that has never been visited as the next node in the path. It has no performance guarantees, however it should perform reasonably well on most inputs. This method is simple to adapt for our meta agent, as we can construct a distance matrix between every pair of nodes.
+
+\subsubsection{Ant Colony Optimization}
+TODO
+
+Overall, although it may be possible to train a planning agent using reinforcement learning, in practice hand crafted algorithms are still able to achieve superior results.
 
 \section{Results}
 \label{results}
