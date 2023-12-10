@@ -132,8 +132,28 @@
         \item Running traffic lights, making u-turns, and going out of bounds were always penalized instead of it being probabilistic
         \item All penalized actions penalized to the same amount
     \end{itemize}
+    
+    \subsection{Advantage Actor Critic (A2C)}
+    \label{a2c}
+    A2C is an actor critic algorithm which was created by the need to address the limitations of its predecessor, the Asynchronous Advantage Actor-Critic (A3C) algorithm, particularly regarding the asynchronous nature of A3C which could lead to non-optimal convergence due to delayed updates from its multiple worker agents.[5] The A2C algorithm modifies this approach by implementing synchronous updates, which means it waits for each of its multiple agents to finish their experience trajectories before it updates the model. This change leads to more stable and consistent learning, as all updates are based on the most current data.
 
-     	\subsection{Double Deep Q-Learning}
+    A pivotal element in A2C is the advantage function, denoted as \( A(s, a) \). This function is defined as the difference between the action-value function and the state-value function: 
+    
+    \begin{center}
+        $A(s, a) = Q(s, a) - V(s)$
+    \end{center}
+    
+    The advantage function quantifies the relative benefit of an action \( a \) in a state \( s \) compared to the average action at that state. By focusing on the advantage function, A2C targets learning on actions that are more beneficial than average, thereby enhancing the efficiency of the learning process. The policy, guided by the Actor, is updated using a gradient ascent approach on the expected return. The formula is expressed as: 
+    \begin{center}
+        $\theta \leftarrow \theta + \alpha \nabla_{\theta} \log \pi(a | s, \theta) A(s, a)$
+    \end{center}
+    
+    Simultaneously, the Critic is updated to improve its estimates of the state-value function. This usually involves minimizing the difference between the estimated values and the actual returns, enhancing the accuracy of the Critic's evaluations.
+    
+    Some reasons for using A2C with our particular problem is that it works well with discrete environments, and the advantage function reduces the negative impact of high variability between individual episodes, which was very likely in our environment due to the random placement of targets, and traffic lights. It has also been used in other traffic problems.
+
+    
+    \subsection{Double Deep Q-Learning}
 
         An alternate function approximation approach to PPO was explored via the use of a Double Deep Q-Learning Architecture, introduced in [X].
 
@@ -169,9 +189,12 @@
 
         The training portion of the implementation was done twice, once for the agent in the original environment with multiple targets, and once for the agent in the same environment but with the simplification of only a single target being present.
 
+        The reasoning behind using a DQN-approach was that such algorithms are well-suited to discrete environments, and a comparison of performance could then be done with actor-critic methods PPO and A2C.
+
         The Double DQN implementation was conducted by following the PyTorch tutorial for Deep Q-learning (available \href{https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html}{here}), and all hyperparameters were kept the same.
 
-    \subsection{Planning Meta-Agent}
+
+     \subsection{Planning Meta-Agent}
     \label{planning}
     In this design architecture, an agent consists of two parts. First, it has an agent trained for navigating from a given state to another given state with the maximum reward. However, this agent alone has limited usefulness as it does not have any reasonable way to handle longer runs with multiple targets. To solve this problem another component is added to the agent which is specialized in forming long term plans. Essentially, these components treat the environment as a fully connected graph, and it is able to go from any node to any other node with a single action. It is able to do this as the designer knows that the navigation agent is able to move from any node to any other node in some number of actions.
     
@@ -207,25 +230,6 @@
     This method uses a large population of simple agents. For each agent, they start at a random node, and need to complete one full cycle. Then they apply a value of $\frac{1}{cycle length}$ to the action it took along each step of its path. Then, future agents are able to use this pheromone trail to probabilistically select the next node they go to. Since lower cycle lengths give a higher value, the ants will eventually produce a good quality approximation of the shortest path using a time proportional to the number of agent iterations. This produces very good results, and works well in the non-euclidean space as it solely relies on cycle lengths, and not any other property of the environment.
     
     Overall, although it may be possible to train a planning agent using reinforcement learning, in practice hand crafted algorithms are still able to achieve superior results.
-    
-    \subsection{Advantage Actor Critic (A2C)}
-    \label{a2c}
-    A2C is an actor critic algorithm which was created by the need to address the limitations of its predecessor, the Asynchronous Advantage Actor-Critic (A3C) algorithm, particularly regarding the asynchronous nature of A3C which could lead to non-optimal convergence due to delayed updates from its multiple worker agents.[5] The A2C algorithm modifies this approach by implementing synchronous updates, which means it waits for each of its multiple agents to finish their experience trajectories before it updates the model. This change leads to more stable and consistent learning, as all updates are based on the most current data.
-
-    A pivotal element in A2C is the advantage function, denoted as \( A(s, a) \). This function is defined as the difference between the action-value function and the state-value function: 
-    
-    \begin{center}
-        $A(s, a) = Q(s, a) - V(s)$
-    \end{center}
-    
-    The advantage function quantifies the relative benefit of an action \( a \) in a state \( s \) compared to the average action at that state. By focusing on the advantage function, A2C targets learning on actions that are more beneficial than average, thereby enhancing the efficiency of the learning process. The policy, guided by the Actor, is updated using a gradient ascent approach on the expected return. The formula is expressed as: 
-    \begin{center}
-        $\theta \leftarrow \theta + \alpha \nabla_{\theta} \log \pi(a | s, \theta) A(s, a)$
-    \end{center}
-    
-    Simultaneously, the Critic is updated to improve its estimates of the state-value function. This usually involves minimizing the difference between the estimated values and the actual returns, enhancing the accuracy of the Critic's evaluations.
-    
-    Some reasons for using A2C with our particular problem is that it works well with discrete environments, and the advantage function reduces the negative impact of high variability between individual episodes, which was very likely in our environment due to the random placement of targets, and traffic lights. It has also been used in other traffic problems.
 
     \section{Results}
     \label{results}
@@ -253,8 +257,6 @@
     \footnotetext[2]{Scores are approximately out of 1000 for single target - Approximate because there is additional positive reward for stopping at traffic light}
     \footnotetext[3]{In minutes}
     \footnotetext[4]{Stop at green: -2; Stop at node that is not traffic light: -2; Everything else: -5}
-    
-    This A2C implementation was using the stable_baseline3 package. It ended up yielding far better results than those shown during the demo which was a different implementation of A2C.
 
     \begin{table*}[h]
         \centering
@@ -274,11 +276,28 @@
         \end{tabular}
         \label{tab: A2C_Table}
     \end{table*}
-    
 
+`   \begin{table*}[h]
+        \centering
+        \caption[]{Results for Double DQN}\label{Results for PPO}%
+        \begin{tabular}{cccc}
+            \toprule
+            Target & Agent Return & Random Return & Training Episodes \\
+            \midrule
+            Single & 326 & -301 & 1000 \\
+            Multiple & 23 & -305 & 10000 \\
+            \bottomrule
+        \end{tabular}
+        \label{tab: PPO_Table}
+    \end{table*}
+    
     \section{Discussion}
     \label{discussion}
     From the results, it is clear that for PPO, the more complex the environment becomes, the worse the agent performs. This is expected as it is quite difficult to find an optimal solution to our problem considering how the environment behaves. When there is a single target, there does not seem to be large difference in performance. The higher score for different reward scaling compared to same can be attributed to the fact that when it makes mistakes, the penalty is lower in the different reward scaling scenario, which is coincidentally also the case for the multiple targets scenario. It is worth noting that the total score for multiple targets is difficult to say since the number of targets is not fixed but it is more than 1000 since there is always at least one target.
+
+    Table 2 illustrates the results for the actor-critic implementation. This A2C implementation was using the stable\_baseline3 package. It ended up yielding far better results than those shown during the demo which was a different implementation of A2C.
+
+    Table 3 showcases the performance of the DQN implementation in the context of the original environment, where reward structures are kept stochastic and scaled, but two separate agents were trained. One agent was trained for multi-target environments and the other for single targets. As in all other implementations, performance worsened when the environment was unrestricted to multiple targets. Upon further investigation for the DQN implementation specifically, it appeared the optimal policy learned by the agent was to remain stationary, so this implies the method was prone to poor finding poor local minima. In addition, DQN performed worse than A2C and PPO. In particular, it showed far slower convergence time towards optimal behaviour. It is suspected this gap may be reduced if a search is done for better hyperparameters.
     
     An interesting idea would be to fix the traffic lights instead of randomly initializing them. This seems quite intuitive and in fact, could even be considered closer to reality since if the environment is a representation of an urban city setting and we consider that it is the same city, traffic lights and their locations will not suddenly change. And even if they do change, they should remain consistent for a significant time once they do. Perhaps this is an avenue worth exploring where traffic lights are initially fixed but can randomly change after a certain amount of time steps. 
     
