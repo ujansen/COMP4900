@@ -1,5 +1,5 @@
-# Tutorial from: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html 
-# This script is for training the agent and saving the policy net state dict afterwardss
+# Implementation followed the PyTorch DQN tutorial available at: https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html .
+# This script is for training the agent and saving the policy net state dict afterwards
 import gymnasium as gym
 from gymnasium.wrappers.flatten_observation import FlattenObservation
 import os
@@ -21,7 +21,7 @@ import torch.optim as optim
 import torch.nn.functional as F
 
 
-POLICY_NET__DIR_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "policy_net")
+POLICY_NET__DIR_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "trained_policy_nets")
 # POLICY_NET_FILENAME = "policy_net_multiple_targets.pth"
 POLICY_NET_FILENAME = "policy_net_single_target.pth"
 

@@ -1,6 +1,6 @@
 # Script for testing agent performance.
 # Can modify the agent used below (e.g to see DQN vs random agent comparison)
-# Test9ing of performance measures the total sum of returns over 1000 episodes
+# Testing of performance measures the total sum of returns over 1000 episodes
 
 import RoadNetEnv
 import gymnasium as gym
@@ -11,7 +11,7 @@ import os
 from DQN import DQN
 from gymnasium.wrappers.flatten_observation import FlattenObservation
 
-POLICY_NET__DIR_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "policy_net")
+POLICY_NET__DIR_PATH = os.path.join(os.path.dirname(os.path.realpath(__file__)), "trained_policy_nets")
 # POLICY_NET_FILENAME = "policy_net_multiple_targets.pth"
 POLICY_NET_FILENAME = "policy_net_single_target.pth"
 
@@ -62,9 +62,9 @@ for _ in range(NUM_EPISODES):
         #observation = torch.tensor(state, dtype=torch.float32, device=device).unsqueeze(0)
 
         # Random
-        action = env.action_space.sample()  # agent policy that uses the observation and info
+        # action = env.action_space.sample()  # agent policy that uses the observation and info
         # Trained Policy
-        # action = greedy_select_action(policy_net, observation)
+        action = greedy_select_action(policy_net, observation)
         #print(action)
 
         observation, reward, terminated, truncated, info = env.step(action)
@@ -76,11 +76,9 @@ for _ in range(NUM_EPISODES):
             break
 
     # After end of current episode
-    print(cur_return)
     returns.append(cur_return)
 
 env.close()
-print(returns)
-average_return = sum(returns) / len(returns)
 
-print(f"Average return across {NUM_EPISODES} episodes:", average_return)
+print(f"Sum of return across {NUM_EPISODES} episodes:", sum(returns))
+
