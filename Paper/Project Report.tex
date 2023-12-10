@@ -269,9 +269,9 @@
 			Single & Deterministic & Different & 899 & -301 & 10,000\\
 			Single & Probabilistic & Different & 921 & -407 & 10,000\\
 			\midrule
-			Multiple & Deterministic & Same & 220 & -366 & 20\\
+			Multiple & Deterministic & Same & 220 & -366 & 10,000\\
 			Multiple & Deterministic & Different & 262 & -233 & 10,000\\
-			Multiple & Probabilistic & Different & 73 & -257 & 10,000\\
+			Multiple & Probabilistic & Different & 190 & -257 & 10,000\\
 			\bottomrule
 		\end{tabular}
 	\end{table*}
@@ -293,7 +293,7 @@
 	\label{discussion}
 	From the results, it is clear that for PPO \ref{Results for PPO}, the more complex the environment becomes, the worse the agent performs. This is expected as it is quite difficult to find an optimal solution to our problem considering how the environment behaves. When there is a single target, there does not seem to be large difference in performance. The higher score for different reward scaling compared to same can be attributed to the fact that when it makes mistakes, the penalty is lower in the different reward scaling scenario, which is coincidentally also the case for the multiple targets scenario. It is worth noting that the total score for multiple targets is difficult to say since the number of targets is not fixed but it is more than 1000 since there is always at least one target.
 	
-	A2C results \ref{Results for A2C} illustrate similar results to that of PPO except in the final scenario. 
+	A2C results \ref{Results for A2C} are very similair to that of PPO. With them both being algorithms of a similiar nature, which use function gradients to update their policies, this is to be expected. As mentioned in the methods sections 4.2, the A2C algorithm which was implemented for our final results was different than implementation shown in the demo. The Stablebaseline3 implementtion showed vastly improved results as it avoided local optimums much better. A potential reason for this is the calculation of entropy loss which is used as a measure of randomness in the policy's actions, and it's used to encourage exploration. In our weaker implementation the model learned to avoid very bad results, but did not do well in reaching the target, in both single and multiple target environments.    
 		
 	\ref{Results for DDQN} showcases the performance of the DQN implementation in the context of the original environment, where reward structures are kept stochastic and scaled, but two separate agents were trained. One agent was trained for multi-target environments and the other for single targets. As in all other implementations, performance worsened when the environment was unrestricted to multiple targets. Upon further investigation for the DQN implementation specifically, it appeared the optimal policy learned by the agent was to remain stationary, so this implies the method was prone to poor finding poor local minima. In addition, DQN performed worse than A2C and PPO. In particular, it showed far slower convergence time towards optimal behaviour. It is suspected this gap may be reduced if a search is done for better hyper-parameters.
 	
