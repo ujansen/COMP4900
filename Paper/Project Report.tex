@@ -12,33 +12,78 @@
 \usepackage{microtype}      
 \usepackage{xcolor}         
 \usepackage{amssymb}
+\usepackage{amsmath}
 
-
+\usepackage{graphicx}
+ \usepackage[verbose]{placeins} 
+ 
 \title{Analysis on Reinforcement Learning Methods on Navigation in a Dynamic Environment}
 
 
 \author{
-    Callum Hendry: 100970932\\
-    \texttt{callumhendry@cmail.carleton.ca}
-    \And
-    Jason Dunn: 101140827\\
-    \texttt{jason.dunn@carleton.ca}
-    \And
-    Ujan Sen: 101171605\\
-    \texttt{ujansen@cmail.carleton.ca}
-    \And
-    Uvernes Somarriba: 101146733\\
-    \texttt{uvernes.somarribacast@cmail.carleton.ca}
+	Callum Hendry: 100970932\\
+	\texttt{callumhendry@cmail.carleton.ca}
+	\And
+	Jason Dunn: 101140827\\
+	\texttt{jason.dunn@carleton.ca}
+	\And
+	Ujan Sen: 101171605\\
+	\texttt{ujansen@cmail.carleton.ca}
+	\And
+	Uvernes Somarriba: 101146733\\
+	\texttt{uvernes.somarribacast@cmail.carleton.ca}
 }
 
 
 \begin{document}
-    
-    
-    \maketitle
-    
-    \section{Introduction}
-    
+	
+	
+	\maketitle
+	
+	\section{Introduction}
+        Navigation within a dynamic environment towards objective targets is a complex task requiring both the proper adherence to environment rules, such as following stop light rules within the context of road travel, and path planning capabilities for determining an efficient route across all targets. In this work, we explore various reinforcement learning approaches for the automatic navigation of such dynamic environments. Specifically, we devise RL algorithms to train agents capable of visiting all targets of interest in some arbitrary sparse graph, in both an efficient and well-behaved manner, given a variety of input parameters about the environment network state. This is a simplified simulation that is analogous to simulating dynamic pathing around a road network. The various reinforcement learning methods we devise are evaluated for effectiveness, efficiency, and adaptability.
+        \\ \\
+        Devising strong solutions towards autonomous navigation has immense value. The most immediate benefit is that this would facilitate the incorporation of self-driving cars within the real-world. It has been observed in several other domains for agents to achieve superhuman performance, and if this were to extend to vehicle navigation, it would yield a reduced number of incidents on the road. This reduction in accidents would lead to fewer car-related deaths and injuries per year, thereby indirectly saving an immeasurable number of lives. In addition, self-driving cars may reduce the waiting times for deliveries, such as for packages or medication. Outside the context of the roads, it may be possible to incorporate autonomous navigation to other tasks such as the robotic navigation of a medical instrument to an anatomy of interest during a medical procedure, to provide aid to practitioners. Thus, there are tremendous benefits to be sowed from work in autonomous navigation. 
+        \\ \\
+        The paper proceeds with a discussion of pre-existing research in dynamic navigation, an explanation of our specific task environment, our devised RL methods, their resulting performances, and a discussion of these results. We then conclude with some closing remarks.
+      
+        \section{Related Work}
+
+        There has been previous research in autonomous navigation of dynamic environments. 
+        
+        [-1] introduces Globally Guided Reinforcement Learning (G2RL), a novel approach to robot navigation in a dynamic environment, combining a global guidance approach, using traditional algorithms such as A* search, with localized RL suitable for avoiding dynamic obstacles.
+        
+        [-2] discusses an RL approach to the traveling salesman problem in a dynamic environment, where stochastic factors are present. Deep RL with an attention model is used, incorporating encoder-decoder architectures, capable of handling changing environment conditions such as traffic. 
+        
+        [-3] implemented a framework called MCAL (Mobile robot Collision Avoidance Learning) wherein the agent acquires its current state information from a GPS, locating it relative to the target, but they also added a Look Ahead Point (LAP), calculated by its Lidar system, which is a short term goal. If the agent encounters a dynamic obstacle that doesn’t show up on the GPS, it uses a RL system where the further away it moves from the LAP, the higher negative reward it receives, discouraging moving too far off target. However, it receives a much more substantial negative reward if it collides with the obstacle.
+        
+        [-4] deals with multi-agent path finding, where numerous agents must travel to their own locations in a way such as to not conflict with one another. The developed algorithm PRIMAL combines RL and imitation learning. It is particularly of value in environments where multiple delivery drivers operate simultaneously in the same city.
+        \\
+        ****I think we need 4 more briefly mentioned papers here. I don't think the papers linked in our approaches are the same thing. In specs: \\
+        "Provide a brief review of prior work on this problem (at least 5 papers)"
+        ****
+        \section{Environment Setup}
+
+        An RL environment is typically modelled as a Markov Decision Process, which is comprised of a state space, action space, its transition probabilities and reward structure.
+
+        The environment we modelled for this task simulated a road network environment, and it supported the use of an underlying, arbitrary graph structure $G = (V, E)$, where V is some set of nodes and E is the set of edges between nodes, defining which transitions are possible from a given node. For each $v\in V$, it is either a regular or traffic node, where a traffic node toggles between a green and red light after a certain number of time steps. At the start of an episode, the agent begins at a random node and the environment contains a target at one or more vertices. The episode terminates once the agent has picked up all nodes, if an action leads to a crash outcome or a cutoff max number of episodes have passed.
+
+        The specific road network used in training and evaluation was a 5x5 grid world, where each node had a 0.10 probability of containing a target, represented as yellow. Non-target nodes had a 0.6 probability of being traffic lights, represented as toggling red and outer circles. The agent, placed randomly at a non-target node, was represented in blue. See Figure 1 below for a random instance of the grid world.
+
+        \begin{figure}[hbt!]
+          \centering
+          \includegraphics[scale=0.5]{grid-world.png}
+          \caption{caption here}
+          \label{fig:grid-world.png}
+        \end{figure}
+        \FloatBarrier 
+
+        The original state space was a 4-tuple of the form: (A,A',Targets,Traffic). A and A' are integers representing the current and previous index of the node the agent was at. Targets is a |V|=25 Boolean vector with $V_{i}=1$ if $V_i$ contains a target and zero otherwise. Traffic is a Boolean value which is 1 if and only if the current node is a traffic node and it is a red light.
+
+        The agent's action space was discrete and consisted of 5 possible actions: move left, right, up, or down, or stay at current node. The edges corresponding to out of bound actions pointed back to the same node.
+
+        The original reward structure, which was slightly modified in certain implementations, involved both deterministic and stochastic components. If the agent picked up a target, the target disappeared from the environment and the agent received a reward of +1. If the agent took an action going out of bounds, the reward was -2.0 and the episode terminated. If the agent performed a U-turn at a non-red light, where a U-turn action was detected by considering the angle between the previous and next node, there was a 0.8 probability the agent received -2.0 reward and the episode terminated. Furthermore, if at a red stop light and the agent turned right, left, straight, or back, with probabilities 0.4, 0.8, 0.9, and 0.95, respectively, a reward of -5.0 was given along with episode termination. In all other cases, such as legal movement to a non-target node, a reward of 0 was given.
+        
     \section{Methods}
     \subsection{Proximal Policy Optimization (PPO)}
     \label{ppo}
@@ -87,7 +132,45 @@
         \item Running traffic lights, making u-turns, and going out of bounds were always penalized instead of it being probabilistic
         \item All penalized actions penalized to the same amount
     \end{itemize}
-    
+
+     	\subsection{Double Deep Q-Learning}
+
+        An alternate function approximation approach to PPO was explored via the use of a Double Deep Q-Learning Architecture, introduced in [X].
+
+        In tabular Q-learning, estimates of the optimal action-values are updated based on Bellman's optimality equation [Y]:
+        \\
+        \begin{center}
+        $Q(S_{t}, A_{t}) \leftarrow Q(S_{t}, A_{t}) + \alpha\cdot\delta_{t}$
+	\end{center}
+
+        Where $d_{t}$ is given by [Y]:
+        
+        \begin{center}
+        $d_{t} = R_{t+1} + \gamma\max_{a'}Q(S_{t+1}, a') - Q(S_{t}, A_{t})$
+	\end{center}
+        
+        However, this requires storage of the estimates for each state individually and good estimates can only be acquired for a state if it is visited sufficiently many times. Acquiring adequate estimates in this manner is infeasible for large state spaces, including for the task examined in this paper, so a function approximation approach must be taken.
+
+        Q-learning via function approximation requires the learning of a function able to map the feature representation of states to their associated action-values under an optimal policy. In deep Q learning [X], the learned function is a deep neural network, and its performance at estimating values, measured by some loss function, is improved via some propagation algorithm.
+
+        In our implementation, the cost function calculates the error between samples by mapping $d_{t}$ using the Huber Loss function [Z]:
+            
+        \begin{equation}
+        L(\delta)=
+            \begin{cases}
+                \frac{1}{2}\delta^{2} & \text{if  } |\delta| \leq 1\\
+                |\delta| - \frac{1}{2} & \text{otherwise} 
+            \end{cases}
+        \end{equation}
+
+        The specific architecture consisted of a fully connected, 3-layer network using the reLU activation function to introduce non-linearity.
+
+        The portion resulting in the name of a 'Double' DQN is that there were two networks utilized [X]. The primary network was the policy network and it was responsible for the prediction of the action-values from the current state. The secondary network was called the target network and it was utilized in computing the action-values of the subsequent state, which is a necessary calculation in computing the target and thereby finding the loss when updating. The weights of this network were made to slowly update to the weights of the policy network, where the policy network weights may change in a different direction. This stabilizing of target values has shown to lead to better model performance [X]. Another trick utilized for the improvement of agent results was the use of replay memory, in which the implementation stored the last ten thousand transitions and sampled from this storage during training.
+
+        The training portion of the implementation was done twice, once for the agent in the original environment with multiple targets, and once for the agent in the same environment but with the simplification of only a single target being present.
+
+        The Double DQN implementation was conducted by following the PyTorch tutorial for Deep Q-learning (available \href{https://pytorch.org/tutorials/intermediate/reinforcement_q_learning.html}{here}), and all hyperparameters were kept the same.
+
     \subsection{Planning Meta-Agent}
     \label{planning}
     In this design architecture, an agent consists of two parts. First, it has an agent trained for navigating from a given state to another given state with the maximum reward. However, this agent alone has limited usefulness as it does not have any reasonable way to handle longer runs with multiple targets. To solve this problem another component is added to the agent which is specialized in forming long term plans. Essentially, these components treat the environment as a fully connected graph, and it is able to go from any node to any other node with a single action. It is able to do this as the designer knows that the navigation agent is able to move from any node to any other node in some number of actions.
@@ -220,7 +303,15 @@
     
     [4] Wang, Y., He, H., Wen, C., \& Tan, X. (2020). Truly Proximal Policy Optimization. arXiv preprint \href{https://arxiv.org/abs/1903.07940}{arXiv:1903.07940}.
     
-    [5] Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T., Harley, T., Silver, D., & Kavukcuoglu, K. (2016). Asynchronous Methods for Deep Reinforcement Learning. arVix preprint \href{https://arxiv.org/abs/1602.01783}{arXiv:1602.01783},
+    [5] Mnih, V., Badia, A. P., Mirza, M., Graves, A., Lillicrap, T., Harley, T., Silver, D., & Kavukcuoglu, K. (2016). Asynchronous Methods for Deep Reinforcement Learning. arVix preprint \href{https://arxiv.org/abs/1602.01783}{arXiv:1602.01783}.
+
+    [X] van Hasselt, H., Guez, A., & Silver, D. (2016). Deep Reinforcement Learning with Double Q-Learning. Proceedings of the AAAI Conference on Artificial Intelligence, 30(1). https://doi.org/10.1609/aaai.v30i1.10295
+
+    [Y] RL textbook
+
+    [Z] Huber Loss. https://arxiv.org/pdf/2108.12627.pdf 
+
+    
 \end{document}
 
-    [6]
+    
