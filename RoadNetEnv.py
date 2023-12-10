@@ -98,7 +98,7 @@ class RoadNetEnv(gym.Env):
         """
         return {
             "agent": int(self._agent_pos),
-            "target": self._target_nodes,
+            "target": int(self.target_index) if self.single_target else self._target_nodes,
             "prev": int(self._previous_pos),
             "traffic": self._traffic_node_colours[self._agent_pos] if self._agent_pos in self._traffic_node_colours
             else 1
@@ -139,9 +139,9 @@ class RoadNetEnv(gym.Env):
 
         # check if the agent tries to move out of bounds
         elif self._agent_pos == cur_pos and action != 4:
-            print("Tried going out of bounds")
-            print(f"Tried going from {self.node_positions[cur_pos]} to "
-                  f"{self.node_positions[self._agent_pos]}")
+            #print("Tried going out of bounds")
+            # print(f"Tried going from {self.node_positions[cur_pos]} to "
+            #       f"{self.node_positions[self._agent_pos]}")
             reward = -1.0
             terminated = True
 
@@ -151,20 +151,26 @@ class RoadNetEnv(gym.Env):
             if np.random.rand() < self._find_accident_prob(cur_pos):
                 reward = -5.0
                 terminated = True
-            print(f"Tried going from {self.node_positions[cur_pos]} to "
-                  f"{self.node_positions[self._agent_pos]} while "
-                  f"red traffic light")
+            # print(f"Tried going from {self.node_positions[cur_pos]} to "
+            #       f"{self.node_positions[self._agent_pos]} while "
+            #       f"red traffic light")
 
         # check if the agent tries taking a U-turn
         elif self._agent_pos == self._previous_pos and self._timer > 1:
-            print(f"Tried taking a u-turn from {self.node_positions[cur_pos]} to "
-                  f"{self.node_positions[self._agent_pos]} and timer is {self._timer}")
-            if np.random.rand() > 0.75:
+            # print(f"Tried taking a u-turn from {self.node_positions[cur_pos]} to "
+            #       f"{self.node_positions[self._agent_pos]} and timer is {self._timer}")
+            if np.random.rand() > 0.2:
                 reward = -2.0
                 terminated = True
 
-        if reward != 0:
-            print(reward)
+        # If agent stays still unnecessarily, we penalize this also.
+        if action == 4 and ((self._traffic_nodes[cur_pos] and self._traffic_node_colours[cur_pos] == 1) or
+            (not self._traffic_nodes[cur_pos])):
+            reward = -1.0
+
+        # if reward != 0:
+        #     print(reward)
+        # A small negative reward 
 
         observation = self._get_obs()
 
@@ -206,8 +212,8 @@ class RoadNetEnv(gym.Env):
         # angle = np.arccos(np.clip(np.dot(prev_vector / np.linalg.norm(prev_vector),
         #                                  next_vector / np.linalg.norm(next_vector)), -1.0, 1.0))
         angle = np.rad2deg(np.arctan2(np.cross(prev_vector, next_vector), np.dot(prev_vector, next_vector)))
-        print(prev_node_coord, cur_node_coord, next_node_coord)
-        print(angle, prev_vector, next_vector)
+        #print(prev_node_coord, cur_node_coord, next_node_coord)
+        #print(angle, prev_vector, next_vector)
 
         # if angle between 0 and 45 or 315 and 360, snap to the straight direction
         if 0 <= angle < 90:
@@ -225,14 +231,14 @@ class RoadNetEnv(gym.Env):
         else:
             direction_key = 3
         direction = self._angle_to_direction[direction_key]
-        print(direction)
+        #print(direction)
 
         # find the probability of accident depending on the direction
         probability = self._accident_prob[direction]
 
         return probability
 
-    def __init__(self, render_mode=None, graph=None, node_positions=None):
+    def __init__(self, render_mode=None, graph=None, node_positions=None, single_target=False):
         """
         Initializes the environment with all necessary information
 
@@ -240,6 +246,9 @@ class RoadNetEnv(gym.Env):
         :param graph: The graph which acts as the environment.
         :param node_positions: The positions of each node in the graph as an (x, y) coordinate.
         """
+        self.single_target = single_target
+        self.target_index = None
+
         # if no graph is specified, create a random graph
         if graph is None:
             self.n_nodes = 100
@@ -258,9 +267,18 @@ class RoadNetEnv(gym.Env):
 
         # randomly set the agent, target, and traffic locations (make sure traffic, agent, and targets do not overlap)
         self._agent_pos = randint(0, self.n_nodes - 1)
-        self._target_nodes = np.random.rand(self.n_nodes) > 0.9
-        while self._target_nodes[self._agent_pos] and not np.any(self._target_nodes):
+
+        if self.single_target:
+            self.target_index = randint(0, self.n_nodes - 1)
+            while self.target_index == self._agent_pos:
+                self.target_index = randint(0, self.n_nodes - 1)
+            self._target_nodes = np.zeros((self.n_nodes,))
+            self._target_nodes[self.target_index] = 1
+        # Multiple targets
+        else:
             self._target_nodes = np.random.rand(self.n_nodes) > 0.9
+            while self._target_nodes[self._agent_pos] and not np.any(self._target_nodes):
+                self._target_nodes = np.random.rand(self.n_nodes) > 0.9
 
         self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
         while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)) or self._traffic_nodes[self._agent_pos]:
@@ -295,7 +313,7 @@ class RoadNetEnv(gym.Env):
         self.observation_space = spaces.Dict(
             {
                 "agent": spaces.Discrete(self.n_nodes),
-                "target": spaces.MultiBinary((self.n_nodes,)),
+                "target": spaces.Discrete(self.n_nodes) if self.single_target else spaces.MultiBinary((self.n_nodes,)),
                 "prev": spaces.Discrete(self.n_nodes),
                 "traffic": spaces.Discrete(2)
             }
@@ -319,9 +337,18 @@ class RoadNetEnv(gym.Env):
         """
         super().reset(seed=seed)
         self._agent_pos = randint(0, self.n_nodes - 1)
-        self._target_nodes = np.random.rand(self.n_nodes) > 0.9
-        while self._target_nodes[self._agent_pos] and not np.any(self._target_nodes):
+
+        if self.single_target:
+            self.target_index = randint(0, self.n_nodes - 1)
+            while self.target_index == self._agent_pos:
+                self.target_index = randint(0, self.n_nodes - 1)
+            self._target_nodes = np.zeros((self.n_nodes,))
+            self._target_nodes[self.target_index] = 1
+        # Multiple targets
+        else:
             self._target_nodes = np.random.rand(self.n_nodes) > 0.9
+            while self._target_nodes[self._agent_pos] and not np.any(self._target_nodes):
+                self._target_nodes = np.random.rand(self.n_nodes) > 0.9
             
         self._traffic_nodes = np.random.rand(self.n_nodes) > 0.6
         while np.any(np.logical_and(self._traffic_nodes, self._target_nodes)) or self._traffic_nodes[self._agent_pos]:
