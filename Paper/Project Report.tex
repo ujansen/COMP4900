@@ -56,7 +56,7 @@
 	A paper by Zhang et al. (2023) [2] discusses an RL approach to the traveling salesman problem in a dynamic environment, where stochastic factors are present. Deep RL with an attention model is used, incorporating encoder-decoder architectures, capable of handling changing environment conditions such as traffic. 
 	
 	To further work on autonomous navigation, Choi et al. (2021) [3] implemented a framework called MCAL (Mobile robot Collision Avoidance Learning) wherein the agent acquires its current state information from a GPS, locating it relative to the target, but they also added a Look Ahead Point (LAP), calculated by its Lidar system, which is a short term goal. If the agent encounters a dynamic obstacle that doesn’t show up on the GPS, it uses a RL system where the further away it moves from the LAP, the higher negative reward it receives, discouraging moving too far off target. However, it receives a much more substantial negative reward if it collides with the obstacle.
-    
+	
 	Taking a multi-agent approach, Sartoretti et al. (2018) [4] deals with multi-agent path finding, where numerous agents must travel to their own locations in a way such as to not conflict with one another. The developed algorithm PRIMAL combines RL and imitation learning. It is particularly of value in environments where multiple delivery drivers operate simultaneously in the same city.
 	
 	There was also prior work done by Rosenkrantz et al. (1977) [5] on the travelling salesman problem. It explored a large range of different heuristic methods have been previously studied in order to efficiently and effectively solve the travelling salesman problem. Given the significant similarities, these can be useful in our methods for long term planning.
@@ -64,8 +64,8 @@
 	Path finding using Neural Networks was investigated by Budinich (1996) [6] by using the self-organizing properties of neural networks in order to create a cycle path using euclidean positions.
 	
 	Furthermore, BV (2015) [7] uses ant colony optimization (ACO) as an effective meta-heuristic for finding a near optimal path across a set of nodes, without any restrictions on the properties of the space except for the requirement of having some measure of cost for moving between two nodes.
-
-    Examining the more low-level decisions of navigation, Huang et al. (2019) [8] trained an agent using Deterministic Deep Policy Gradient to effectively control driving action decisions such as steering, accelerating and braking, to follow some prescribed path. This lower-level scope of actions may be used in conjunction with navigation-oriented policies to develop an end-to-end, real world autonomous agent. 
+	
+	Examining the more low-level decisions of navigation, Huang et al. (2019) [8] trained an agent using Deterministic Deep Policy Gradient to effectively control driving action decisions such as steering, accelerating and braking, to follow some prescribed path. This lower-level scope of actions may be used in conjunction with navigation-oriented policies to develop an end-to-end, real world autonomous agent. 
 	
 	\section{Environment Setup}
 	An RL environment is typically modelled as a Markov Decision Process, which comprises a state space, action space, its transition probabilities and a reward structure.
@@ -77,7 +77,7 @@
 	\begin{figure}[hbt!]
 		\label{grid_world}
 		\centering
-		\includegraphics[scale=0.4]{grid-world.png}
+		\includegraphics[scale=0.5]{grid-world.png}
 		\caption{Example environment instance of the 5x5 Grid World}
 		\label{fig:grid-world.png}
 	\end{figure}
@@ -93,7 +93,7 @@
 	\subsection{Proximal Policy Optimization (PPO)}
 	\label{ppo}
 	
-	Proximal Policy Optimization (PPO) was introduced in 2017 [9] and has achieved widespread success in the realm of reinforcement learning. It was a successor to Trust Region Policy Optimization (TRPO) introduced in 2015 [10] which used stochastic gradient ascent by using a trust region constraint to regulate between the old policy and the new updated policy. PPO is considered state-of-the-art and is the default reinforcement learning algorithm used at OpenAI because of its ease of use and significantly better and faster performance than its counterparts. 
+	Proximal Policy Optimization (PPO) was introduced in 2017 by Schulman et al. (2017) [9] and has achieved widespread success in the realm of reinforcement learning. It was a successor to Trust Region Policy Optimization (TRPO) introduced in 2015 also by Schulman et al. (2017) [10] which used stochastic gradient ascent by using a trust region constraint to regulate between the old policy and the new updated policy. PPO is considered state-of-the-art and is the default reinforcement learning algorithm used at OpenAI because of its ease of use and significantly better and faster performance than its counterparts. 
 	
 	The biggest difference between PPO and TRPO is that PPO uses a clipping function which effectively ensures that the new learned policy does not deviate more than a certain amount from the old policy. This is done by first calculating two different sets of surrogates for the policy network. The objective for PPO is calculated as follows [9]:
 	
@@ -103,7 +103,7 @@
 	
 	For the surrogates, the ratios are first calculated between the predicted actions at the current state given the old policy and the new predicted actions. The first surrogate is calculated by weighting the ratios by the calculated advantages. The second surrogate is calculated in a similar way except the ratios are first clipped between 1 - $\epsilon$, and 1 + $\epsilon$ where epsilon is defined as the clip ratio, and then weighted with the advantages. The loss is then defined to be the minimum of these surrogates.
 	
-	Advantages are calculated using Generalized Advantage Estimation (GAE) introduced in 2015 [11]. GAE is an improvement upon traditional advantage estimation methods because of the introduction of the $\lambda$ term which allows a trade-off between bias and variance. A $\lambda$ of 0 reduces GAE to a one-step estimation which is just standard advantage estimation whereas a $\lambda$ of 1 considers rewards infinitely into the future. It takes into consideration the temporal difference of not only the immediate rewards but also the expected future rewards. The formula for GAE calculation is as follows [10]:
+	Advantages are calculated using Generalized Advantage Estimation (GAE) introduced in 2015 by Schulman et al. [11]. GAE is an improvement upon traditional advantage estimation methods because of the introduction of the $\lambda$ term which allows a trade-off between bias and variance. A $\lambda$ of 0 reduces GAE to a one-step estimation which is just standard advantage estimation whereas a $\lambda$ of 1 considers rewards infinitely into the future. It takes into consideration the temporal difference of not only the immediate rewards but also the expected future rewards. The formula for GAE calculation is as follows [11]:
 	
 	\begin{equation}
 		\hat{A}^{GAE}_{t} = \sum_{k=0}^{\infty}(\gamma\cdot\lambda^{k})\cdot\delta_{t+k}
@@ -122,7 +122,7 @@
 		L_{\theta} = \mathbb{E}_{t}[D_{KL}(\pi_{\theta_{old}}(\cdot|s_{t}) || \pi_{\theta}(\cdot|s_{t}))] \leq \delta
 	\end{equation}
 	
-	The benefit PPO gives over TRPO is the usage of clipped ratios and the surrogates. TRPO enforces a strict trust region constraint where the KL-divergence between old policies and new policies is small enough, within a parameter $\delta$ leading to a second-order optimization problem [10][12]. PPO effectively does the same thing using the clipped ratio and taking the minimum of the surrogate losses resulting in a first-order optimization problem. This leads to PPO utilizing fewer computation resources while providing better results.
+	The benefit PPO gives over TRPO is the usage of clipped ratios and the surrogates. TRPO enforces a strict trust region constraint where the KL-divergence between old policies and new policies is small enough, within a parameter $\delta$ leading to a second-order optimization problem as mentioned by [10] and Wang et al. (2020) [12]. PPO effectively does the same thing using the clipped ratio and taking the minimum of the surrogate losses resulting in a first-order optimization problem. This leads to PPO utilizing fewer computation resources while providing better results.
 	
 	The PPO implementation was performed using the library stable\textunderscore baselines3 available  \href{https://stable-baselines3.readthedocs.io/en/master/}{here}. It ran with default arguments as described in the documentation.
 	
@@ -140,7 +140,7 @@
 	
 	\subsection{Advantage Actor Critic (A2C)}
 	\label{a2c}
-	A2C is an actor critic algorithm which was created by the need to address the limitations of its predecessor, the Asynchronous Advantage Actor-Critic (A3C) algorithm, particularly regarding the asynchronous nature of A3C which could lead to non-optimal convergence due to delayed updates from its multiple worker agents [13]. The A2C algorithm modifies this approach by implementing synchronous updates, which means it waits for each of its multiple agents to finish their experience trajectories before it updates the model. This change leads to more stable and consistent learning, as all updates are based on the most current data.
+	A2C is an actor critic algorithm which was created by the need to address the limitations of its predecessor, the Asynchronous Advantage Actor-Critic (A3C) algorithm, particularly regarding the asynchronous nature of A3C which could lead to non-optimal convergence due to delayed updates from its multiple worker agents as explained by Mnih et al. (2016) [13]. The A2C algorithm modifies this approach by implementing synchronous updates, which means it waits for each of its multiple agents to finish their experience trajectories before it updates the model. This change leads to more stable and consistent learning, as all updates are based on the most current data.
 	
 	A pivotal element in A2C is the advantage function, denoted as \( A(s, a) \). This function is defined as the difference between the action-value function and the state-value function: 
 	
@@ -162,7 +162,7 @@
 	
 	\subsection{Double Deep Q-Learning}
 	
-	An alternate function approximation was explored via the use of a Double Deep Q-Learning Architecture, introduced in [14].
+	An alternate function approximation was explored via the use of a Double Deep Q-Learning Architecture, introduced by van Hasselt et al. (2015) [14].
 	
 	In tabular Q-learning, estimates of the optimal action-values are updated based on Bellman's optimality equation [15]:
 	\begin{equation}
@@ -175,7 +175,7 @@
 	
 	However, this requires storage of the estimates for each state individually and good estimates can only be acquired for a state if it is visited sufficiently many times. Acquiring adequate estimates in this manner is infeasible for large state spaces, including for the task examined in this paper, so a function approximation approach must be taken.
 	
-	Q-learning via function approximation requires the learning of a function able to map the feature representation of states to their associated action-values under an optimal policy. In deep Q learning [16], the learned function is a deep neural network, and its performance at estimating values, measured by some loss function, is improved via some propagation algorithm.
+	Q-learning via function approximation requires the learning of a function able to map the feature representation of states to their associated action-values under an optimal policy. In deep Q learning as explained by K. Gokcesu and H. Gokcesu (2021) [16], the learned function is a deep neural network, and its performance at estimating values, measured by some loss function, is improved via some propagation algorithm.
 	
 	In our implementation, the cost function calculates the error between samples by mapping $d_{t}$ using the Huber Loss function [16]:
 	
@@ -204,7 +204,7 @@
 	Several different methods were experimented with to try to create a pathing component. It should be noted that these are not restricted to reinforcement learning, as it is worth considering what other options may offer better performance, as reinforcement learning is not suited to all tasks.
 	
 	\subsubsection{Q-Learning}
-	In this approach standard Q-Learning is used based on a complete graph, with the reward going from any node to any other node being equal to the reward obtained by the navigation agent going between those two nodes. For efficiency two abstractions are made: first, this algorithm only tries to solve the travelling salesman problem for the target nodes, as it is not relevant to plan to visit the others, and second it creates a single reward matrix by running the navigation agent several times, then it simply re-uses those rewards. Given a more restricted environment, it may be viable to plan a path since the action space is more limited [17]
+	In this approach standard Q-Learning is used based on a complete graph, with the reward going from any node to any other node being equal to the reward obtained by the navigation agent going between those two nodes. For efficiency two abstractions are made: first, this algorithm only tries to solve the travelling salesman problem for the target nodes, as it is not relevant to plan to visit the others, and second it creates a single reward matrix by running the navigation agent several times, then it simply re-uses those rewards. Given a more restricted environment, it may be viable to plan a path since the action space is more limited as put forth by Jiang (2022) [17].
 	
 	Unfortunately, using the maximum at each step may not end up creating a complete cycle. Thus, the designer must choose some way to select which actions are taken based on the Q-values. Obtaining the true optimal choices from the Q-Values would involve solving the travelling salesman problem on the values themselves, which effectively defeats the purpose of using this method.
 	
@@ -222,7 +222,7 @@
 	In this approach a neural network is trained to give each node a point on the one-dimensional number line, where it is trivial to solve the travelling salesman problem. In order to do this, it takes in the entire observation given by the environment, and outputs one decimal number per node. These are then sorted and used as the path. This method would eventually give extremely good results as it can converge to a global minima given enough time. However, the main drawbacks of this method are related to its time performance. Evolutionary methods are extremely slow to converge, and it would need to be retrained whenever any aspect of the environment is changed, such as adding or removing a node.
 	
 	\subsubsection{Christofides-Serdyukov Algorithm}
-	Although this algorithm is typically very effective, it is not well suited to this particular problem as the environment does not meet the requirements to be considered a metric space [18]. Namely it violates the following conditions: First, the distance from any node to itself is not zero, as there is a penalty for idling. Next, there is no assumption of symmetry. Finally, there is no guarantee that the triangle inequality will hold depending on the quality of the underlying navigation agent. Thus, the usage of this algorithm would be restricted to the Euclidean distances, which misses significant amounts of nuance in the environment.
+	Although this algorithm is typically very effective, it is not well suited to this particular problem as the environment does not meet the requirements to be considered a metric space  mentioned by Christofides (1976) [18]. Namely it violates the following conditions: First, the distance from any node to itself is not zero, as there is a penalty for idling. Next, there is no assumption of symmetry. Finally, there is no guarantee that the triangle inequality will hold depending on the quality of the underlying navigation agent. Thus, the usage of this algorithm would be restricted to the Euclidean distances, which misses significant amounts of nuance in the environment.
 	
 	\subsubsection{Nearest Neighbour}
 	\label{nearest_neighbour}
@@ -278,7 +278,7 @@
 		\end{tabular}
 	\end{table*}
 	
-	   \begin{table*}[hbt!]
+	\begin{table*}[hbt!]
 		\centering
 		\caption[]{Results for Double DQN}\label{Results for DDQN}%
 		\begin{tabular}{cccc}
@@ -295,8 +295,8 @@
 	\label{discussion}
 	From the results, it is clear that for PPO \ref{Results for PPO}, the more complex the environment becomes, the worse the agent performs. This is expected as it is quite difficult to find an optimal solution to our problem considering how the environment behaves. When there is a single target, there does not seem to be large difference in performance. The higher score for different reward scaling compared to same can be attributed to the fact that when it makes mistakes, the penalty is lower in the different reward scaling scenario, which is coincidentally also the case for the multiple targets scenario. It is worth noting that the total score for multiple targets is difficult to say since the number of targets is not fixed but it is more than 1000 since there is always at least one target.
 	
-	A2C results \ref{Results for A2C} are very similar to that of PPO. With both of them being algorithms of a similar nature, which use function gradients to update their policies, this is to be expected. As mentioned in the methods sections 4.2, the A2C algorithm which was implemented for our final results was different than the implementation shown in the demo. The Stablebaseline3 implementation showed vastly improved results as it avoided local optimums much better. A potential reason for this is the calculation of entropy loss which is used as a measure of randomness in the policy's actions, and it's used to encourage exploration. In our weaker implementation the model learned to avoid very bad results, but it did not do well in reaching the target, in both single and multiple target environments.    
-		
+	A2C results \ref{Results for A2C} are very similar to that of PPO. With both of them being of similar nature, which use function gradients to update their policies, this is to be expected. As mentioned in \ref{a2c}, the A2C algorithm which was implemented for our final results was different than the implementation shown in the demo. The stable\_baselines3 implementation showed vastly improved results as it avoided local optima much better. A potential reason for this is the calculation of entropy loss which is used as a measure of randomness in the policy's actions, and thereby used to encourage exploration. In our weaker implementation the model learned to avoid bad results, but it did not do well in reaching the target, in both single and multiple target environments.    
+	
 	\ref{Results for DDQN} showcases the performance of the DQN implementation in the context of the original environment, where reward structures are kept stochastic and scaled, but two separate agents were trained. One agent was trained for multi-target environments and the other for single targets. As in all other implementations, performance worsened when the environment was unrestricted to multiple targets. Upon further investigation for the DQN implementation specifically, it appeared the optimal policy learned by the agent in the multi-target case was to remain stationary, so this implies the method was prone to finding poor local minima. In addition, DQN performed worse than A2C and PPO overall. In particular, it showed far slower convergence time towards optimal behaviour. It is suspected this gap may be reduced if a search is done for better hyper-parameters.
 	
 	An interesting idea would be to fix the traffic lights instead of randomly initializing them. This seems quite intuitive and in fact, could even be considered closer to reality since if the environment is a representation of an urban city setting and we consider that it is the same city, traffic lights and their locations will not suddenly change. And even if they do change, they should remain consistent for a significant time once they do. Perhaps this is an avenue worth exploring where traffic lights are initially fixed but can randomly change after a certain amount of time steps. 
@@ -315,16 +315,15 @@
 	In this paper, we implemented various reinforcement learning techniques to achieve autonomous navigation in an urban-city environment with multiple targets, which was a modification of the travelling salesman problem. The RL algorithms we investigated were Proximal Policy Optimization (PPO), Advantage Actor Critic (A2C), and Double Deep Q Learning. Furthermore, we experimented with various algorithms for creating a planning agent that would identify what the next target should be for our navigation agent, reducing the problem from multiple to single.
 	
 	Through rigorous experiments and quantifiable results, we can conclude that without the planning agent, the best performing RL technique is PPO while Double Deep Q Learning is the worst. An intelligent planning agent coupled with PPO or A2C would be the optimal solution for our environment since PPO and A2C have comparable results for single targets.
-    \\ \\ \\ \\ \\ \\ \\ \\ \\
-    
-    \section*{References}
+	
+	\section*{References}
 	
 	[1] B. Wang, Z. Liu, Q. Li, and A. Prorok, ‘Mobile Robot Path Planning in Dynamic Environments through Globally Guided Reinforcement Learning’, arXiv [cs.RO]. 2020.
 	
 	[2] Z. Zhang, H. Liu, M. Zhou, and J. Wang, ‘Solving Dynamic Traveling Salesman Problems With Deep Reinforcement Learning’, IEEE Transactions on Neural Networks and Learning Systems, vol. 34, no. 4, pp. 2119–2132, 2023.
 	
 	[3] J. Choi, G. Lee, and C. Lee, "Reinforcement learning-based dynamic obstacle avoidance and integration of path planning," Intelligent Service Robotics, vol. 14, pp. 663–677, 2021. 
-		
+	
 	[4] G. Sartoretti et al., ‘PRIMAL: Pathfinding via Reinforcement and Imitation Multi-Agent Learning’, IEEE Robotics and Automation Letters, vol. 4, no. 3, pp. 2378–2385, Jul. 2019.
 	
 	[5] D. Rosenkrantz, R. Stearns, and P. Ii, ‘An Analysis of Several Heuristics for the Traveling Salesman Problem’, SIAM J. Comput., vol. 6, pp. 563–581, 09 1977.
@@ -332,12 +331,12 @@
 	[6] M. Budinich, ‘A self-organizing neural network for the traveling salesman problem that is competitive with simulated annealing’, Neural Comput, vol. 8, no. 2, pp. 416–424, Feb. 1996.
 	
 	[7] R. BV, “Solving Traveling Salesmen Problem using Ant Colony Optimization Algorithm,” Journal of Applied \&; Computational Mathematics, vol. 04, no. 06. OMICS Publishing Group, 2015. doi: 10.4172/2168-9679.1000260.
-
-        [8] Z. Huang, J. Zhang, R. Tian and Y. Zhang, "End-to-End Autonomous Driving Decision Based on Deep Reinforcement Learning," 2019 5th International Conference on Control, Automation and Robotics (ICCAR), Beijing, China, 2019, pp. 658-662, doi: 10.1109/ICCAR.2019.8813431.
+	
+	[8] Z. Huang, J. Zhang, R. Tian and Y. Zhang, "End-to-End Autonomous Driving Decision Based on Deep Reinforcement Learning," 2019 5th International Conference on Control, Automation and Robotics (ICCAR), Beijing, China, 2019, pp. 658-662, doi: 10.1109/ICCAR.2019.8813431.
 	
 	[9] J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, ‘Proximal Policy Optimization Algorithms’, arXiv [cs.LG]. 2017.
 	
-	[10] J. Schulman, S. Levine, P. Moritz, M. I. Jordan, and P. Abbeel, ‘Trust Region Policy Optimization’, arXiv [cs.LG]. 2017.
+	[10] J. Schulman, S. Levine, P. Moritz, M. I. Jordan, and P. Abbeel, ‘Trust Region Policy Optimization’, arXiv [cs.LG]. 2015.
 	
 	[11] J. Schulman, P. Moritz, S. Levine, M. Jordan, and P. Abbeel, ‘High-Dimensional Continuous Control Using Generalized Advantage Estimation’, arXiv [cs.LG]. 2018.
 	
@@ -356,4 +355,3 @@
 	[18] N. Christofides, “Worst-case analysis of a new heuristic for the travelling salesman problem,” Graduate School of Industrial Administration, 1976. Accessed: Dec. 08, 2023. [Online]. Available: https://apps.dtic.mil/dtic/tr/fulltext/u2/a025602.pdf
 	
 \end{document}
-
